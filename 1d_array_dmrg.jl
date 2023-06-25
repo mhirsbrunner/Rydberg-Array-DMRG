@@ -28,7 +28,7 @@ function parse_commandline()
         
         "--fname"
             arg_type = String
-            default = "delta_sweep_data"
+            default = "data"
 
         "--output_level"
             arg_type = Int
@@ -43,7 +43,7 @@ function main()
     parsed_args = parse_commandline()
 
     # Hamiltonian specification
-    ham_config = JSON3.read(read("1d_ham_config.json"))
+    ham_config = JSON3.read(read("config/1d_ham_config.json"))
     n_sites = ham_config["n_sites"]
     omega = 2π * ham_config["omega"]
     delta = parsed_args["delta_over_omega"] * omega
@@ -62,7 +62,7 @@ function main()
     end
 
     # DMRG specifications
-    dmrg_params = JSON3.read(read("1d_dmrg_config.json"))
+    dmrg_params = JSON3.read(read("config/1d_dmrg_config.json"))
     nsweeps = dmrg_params["nsweeps"]
     maxdim = dmrg_params["maxdim"]
     cutoff = dmrg_params["cutoff"]
@@ -78,7 +78,10 @@ function main()
     params = Dict("hamiltonian_params" => hamiltonian_params, "dmrg_params" => dmrg_params)
     result = Dict("energy" => energy, "rydberg_density" => rydberg_density(psi))
 
+    mkpath(parsed_args["data_dir"])
     JSON3.write(joinpath(parsed_args["data_dir"], parsed_args["fname"] * ".json"), Dict("result" => result, "params" => params))
+
+    println(energy)
 end
 
 main()
