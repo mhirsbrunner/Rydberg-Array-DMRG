@@ -84,4 +84,4 @@ function main()
     println(energy)
 end
 
-main()
+@time main()
