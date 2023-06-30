@@ -1,0 +1,8 @@
+name = "RydbergArrayDMRG"
+uuid = "b0d6fc32-cc06-4f79-b3fa-ee01f9f0f868"
+authors = ["mhirsbrunner <mark@mhirsbrunner.com>"]
+version = "0.1.0"
+
+[deps]
+ITensors = "9136182c-28ba-11e9-034c-db9fb085ebd5"
+JSON3 = "0f8b85d8-7281-11e9-16c2-39a750bddbf1"

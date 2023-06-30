@@ -1,16 +1,17 @@
 FROM julia:latest
 
-# RUN apt-get update && \
-#     apt-get install -y gcc clang && \
-#     rm -rf /var/lib/apt/lists/*
+RUN apt-get update && \
+    apt-get install -y gcc clang && \
+    rm -rf /var/lib/apt/lists/*
 
-RUN julia -e 'using Pkg; Pkg.add.(["JSON3", "ITensors", "ArgParse"]); Pkg.precompile(); Pkg.instantiate()'
-# RUN julia -e 'using ITensors; ITensors.compile()'
+COPY RydbergArrayDMRG ./RydbergArrayDMRG
+COPY prepare_julia.jl .
+COPY setup_config ./setup_config
+COPY precompile_functions.jl .
 
-COPY rydberg_arrays.jl .
-COPY 1d_array_dmrg.jl .
-COPY run_dmrg_point.sh .
+RUN mkdir -p /shft
+ENV JULIA_DEPOT_PATH=/shft
 
-RUN chmod +x run_dmrg_point.sh
+RUN julia prepare_julia.jl
 
-ENTRYPOINT [ "/run_dmrg_point.sh" ]
+COPY generate_phase_diagram.jl .
