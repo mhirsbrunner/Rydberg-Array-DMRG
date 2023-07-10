@@ -3,3 +3,4 @@ test_data/
 data/
 slurm-*
 test/
+temp_data_dir/
