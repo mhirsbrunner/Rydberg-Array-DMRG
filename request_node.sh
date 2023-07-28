@@ -1,0 +1,1 @@
+salloc --nodes 1 --qos interactive --time 0${1}:00:00 --constraint cpu --account=m888

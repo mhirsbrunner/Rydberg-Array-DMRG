@@ -1,1 +1,0 @@
-{"cutoff":1.0E-10,"energy_tol":1E-2,"krylovdim":20,"maxdim":[16, 24, 32, 48, 64, 96, 128, 256, 512],"nsweeps":100}

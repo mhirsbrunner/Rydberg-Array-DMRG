@@ -4,3 +4,5 @@ data/
 slurm-*
 test/
 temp_data_dir/
+archive/
+sys_rydberg.so
