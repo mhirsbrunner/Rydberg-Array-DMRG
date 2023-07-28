@@ -6,3 +6,4 @@ test/
 temp_data_dir/
 archive/
 sys_rydberg.so
+request_node.sh
