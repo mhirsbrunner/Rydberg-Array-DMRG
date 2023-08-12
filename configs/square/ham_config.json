@@ -1,1 +1,1 @@
-{"lattice":"square", "n_x":9, "n_y":4, "omega":1.0, "nn_cutoff":2.1}
+{"lattice":"square", "n_x":8, "n_y":4, "nn_cutoff":2.1, "pinning_field": 0.001}

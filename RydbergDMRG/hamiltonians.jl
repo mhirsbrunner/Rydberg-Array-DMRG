@@ -1,18 +1,17 @@
 using ITensors
 
-C6 = 2π * .862690; # MHz μm^6
-
-function build_ham(delta, a, ham_config)
+function build_ham(ham_config)
     lattice = lowercase(ham_config["lattice"])
-    omega = ham_config["omega"]
+    Rb = ham_config["Rb"]
+    delta = ham_config["delta"]
 
     if cmp(lattice, "chain") * cmp(lattice, "1d_chain") * cmp(lattice, "1d") == 0
         n_sites = ham_config["n_sites"]
 
         if haskey(ham_config, "n_nns")
-            ham, sites = ham_1d_chain(n_sites, omega, delta, a, ham_config["n_nns"])
+            ham, sites = ham_1d_chain(n_sites, Rb, delta, ham_config["n_nns"])
         else
-            ham, sites = ham_1d_chain(n_sites, omega, delta, a)
+            ham, sites = ham_1d_chain(n_sites, Rb, delta)
         end
     elseif cmp(lattice, "square") * cmp(lattice, "square_lattice") == 0
         n_x = ham_config["n_x"]
@@ -20,14 +19,14 @@ function build_ham(delta, a, ham_config)
 
         if haskey(ham_config, "nn_cutoff")
             if haskey(ham_config, "y_periodic")
-                ham, sites = ham_square_lattice(n_x, n_y, omega, delta, a; y_periodic=ham_config["y_periodic"], nn_cutoff=ham_config["nn_cutoff"])
+                ham, sites = ham_square_lattice(n_x, n_y, Rb, delta; y_periodic=ham_config["y_periodic"], nn_cutoff=ham_config["nn_cutoff"])
             else
-                ham, sites = ham_square_lattice(n_x, n_y, omega, delta, a; nn_cutoff=ham_config["nn_cutoff"])
+                ham, sites = ham_square_lattice(n_x, n_y, Rb, delta; nn_cutoff=ham_config["nn_cutoff"])
             end
         elseif haskey(ham_config, "y_periodic")
-            ham, sites = ham_square_lattice(n_x, n_y, omega, delta, a; y_periodic=ham_config["y_periodic"])
+            ham, sites = ham_square_lattice(n_x, n_y, Rb, delta; y_periodic=ham_config["y_periodic"])
         else
-            ham, sites = ham_square_lattice(n_x, n_y, omega, delta, a)
+            ham, sites = ham_square_lattice(n_x, n_y, Rb, delta)
         end
     end
 
@@ -39,7 +38,7 @@ end
 # 1D Chain #
 ############
 
-function ham_1d_chain(n_sites, omega, delta, a, n_nns=4)
+function ham_1d_chain(n_sites, Rb, delta, n_nns=4)
     if n_nns >= n_sites
         n_nns = n_sites - 1
     end
@@ -49,15 +48,14 @@ function ham_1d_chain(n_sites, omega, delta, a, n_nns=4)
     os = OpSum()
 
     for j=1:n_sites
-        os += omega, "Sx", j
+        os += 1, "Sx", j
         os += -delta, "ProjUp", j
     end
 
-    for k=1:n_nns
-        for j=1:n_sites - k
-            r = a * k
-            V = C6 / (r ^ 6)
-            os += V, "ProjUp", j, "ProjUp", j + k
+    for r=1:n_nns
+        for j=1:n_sites - r
+            V = (Rb / r) ^ 6
+            os += V, "ProjUp", j, "ProjUp", j + r
         end
     end
 
@@ -94,20 +92,23 @@ function generate_sites_square_lattice(n_x, n_y)
     return sites
 end
 
-function ham_square_lattice(n_x, n_y, omega, delta, a; yperiodic=true, nn_cutoff=sqrt(2), pinning_field=0.000)
+function ham_square_lattice(n_x, n_y, Rb, delta; yperiodic=true, nn_cutoff=2.1, pinning_field=0.0)
     n_sites = n_x * n_y
     
     lattice_sites = generate_sites_square_lattice(n_x, n_y)
 
     os = OpSum()
 
-    for ii = 1:2:n_x
-        os += -pinning_field, "ProjUp", ii
-    end
+    # for ii = 1:2:n_y
+    #     os += -pinning_field, "ProjUp", ii
+    # end
+
+    # os += -pinning_field, "ProjUp", 1
 
     for ii = 1:n_sites
-        os += omega, "Sx", ii
+        os += 1, "Sx", ii
         os += -delta, "ProjUp", ii
+        os += -(1 + (-1)^ii) * pinning_field, "ProjUp", ii
     end
 
     for ind_1 = 1:n_sites
@@ -124,10 +125,10 @@ function ham_square_lattice(n_x, n_y, omega, delta, a; yperiodic=true, nn_cutoff
                 y_disp = temp_y_disp
             end
 
-            r = a * sqrt(x_disp ^ 2 + y_disp ^ 2)
-            V = C6 / (r ^ 6)
+            r = sqrt(x_disp ^ 2 + y_disp ^ 2)
 
-            if r / a <= nn_cutoff
+            if r <= nn_cutoff
+                V = (Rb / r) ^ 6
                 os += V, "ProjUp", ind_1, "ProjUp", ind_2
             end
         end
@@ -137,7 +138,7 @@ function ham_square_lattice(n_x, n_y, omega, delta, a; yperiodic=true, nn_cutoff
 
     hamiltonian = MPO(os, sites)
 
-    return hamiltonian, sites
+    return hamiltonian, sites, os
 end
 
 # Currently unused

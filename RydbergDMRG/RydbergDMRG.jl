@@ -55,21 +55,15 @@ function calculate_susceptibility(n_sites, m_s, M_N_2)
     return n_sites * (M_N_2 - m_s ^ 2)
 end
 
-function run_phase_diagram_point(rb_over_a, delta_over_omega, config_dir, data_dir; outputlevel=0, write_dir="/pscratch/sd/m/mhirsbru")
-    f_name = "$(rb_over_a)_$(delta_over_omega)"
+function run_phase_diagram_point(Rb, delta, config_dir, data_dir; outputlevel=0, write_dir="/pscratch/sd/m/mhirsbru")
+    f_name = "$(Rb)_$(delta)"
 
     ham_config, dmrg_config = read_config(config_dir)
 
-    # Build Hamiltonian
-    omega = ham_config["omega"]
-    delta = delta_over_omega * omega
-    Rb = (C6 / omega) ^ (1 / 6)
-    a = Rb / rb_over_a
-
-    ham_config["a"] = a
+    ham_config["Rb"] = Rb
     ham_config["delta"] = delta
 
-    ham, sites = build_ham(delta, a, ham_config)
+    ham, sites = build_ham(ham_config)
 
     # Run DMRG
     max_sweeps = dmrg_config["max_sweeps"]
@@ -100,21 +94,15 @@ function run_phase_diagram_point(rb_over_a, delta_over_omega, config_dir, data_d
     return psi
 end
 
-function calculate_gap_magnetization_ent_entropy(rb_over_a, delta_over_omega, config_dir, data_dir; outputlevel=0, write_dir="/pscratch/sd/m/mhirsbru")
-    f_name = "$(rb_over_a)_$(delta_over_omega)"
+function calculate_gap_magnetization_ent_entropy(Rb, delta, config_dir, data_dir; outputlevel=0, write_dir="/pscratch/sd/m/mhirsbru")
+    f_name = "$(Rb)_$(delta)"
 
     ham_config, dmrg_config = read_config(config_dir)
 
-    # Build Hamiltonian
-    omega = ham_config["omega"]
-    delta = delta_over_omega * omega
-    Rb = (C6 / omega) ^ (1 / 6)
-    a = Rb / rb_over_a
-
-    ham_config["a"] = a
+    ham_config["Rb"] = Rb
     ham_config["delta"] = delta
 
-    ham, sites = build_ham(delta, a, ham_config)
+    ham, sites = build_ham(ham_config)
 
     # Run DMRG
     max_sweeps = dmrg_config["max_sweeps"]
@@ -151,25 +139,22 @@ function calculate_gap_magnetization_ent_entropy(rb_over_a, delta_over_omega, co
     store_results(data_dir, f_name, ham_config, dmrg_config, results)
 end
 
-function calculate_finite_size_scaling_data(n_y, rb_over_a, delta_over_omega, config_dir, data_dir; outputlevel=0, write_dir="/pscratch/sd/m/mhirsbru")
-    f_name = "$(n_y)_$(rb_over_a)_$(delta_over_omega)"
+function calculate_finite_size_scaling_data(n_y, Rb, delta, config_dir, data_dir; outputlevel=0, write_dir="/pscratch/sd/m/mhirsbru")
+    f_name = "$(n_y)_$(Rb)_$(delta)"
 
     ham_config, dmrg_config = read_config(config_dir)
 
-    n_x = 2 * n_y - 1
+    n_x = 2 * n_y
     ham_config["n_y"] = n_y
     ham_config["n_x"] = n_x
 
-    # Build Hamiltonian
-    omega = ham_config["omega"]
-    delta = delta_over_omega * omega
-    Rb = (C6 / omega) ^ (1 / 6)
-    a = Rb / rb_over_a
-
-    ham_config["a"] = a
+    ham_config["Rb"] = Rb
     ham_config["delta"] = delta
 
-    ham, sites = build_ham(delta, a, ham_config)
+    pinning_field = ham_config["pinning_field"]
+
+    # ham, sites = build_ham(ham_config)
+    ham, sites, os = ham_square_lattice(n_x, n_y, Rb, delta, pinning_field=pinning_field)
 
     # Run DMRG
     max_sweeps = dmrg_config["max_sweeps"]
@@ -184,11 +169,11 @@ function calculate_finite_size_scaling_data(n_y, rb_over_a, delta_over_omega, co
 
     psi0 = randomMPS(sites, maxdim[1])
 
-    observer = RydbergDMRG.MyObserver(e_tol, ee_tol, trunc_tol, min_sweeps)
-
     write_path = joinpath(write_dir, f_name)
     mkpath(write_path)
     
+    observer = RydbergDMRG.MyObserver(e_tol, ee_tol, trunc_tol, min_sweeps)
+
     energy, psi = dmrg(ham, psi0; nsweeps=max_sweeps, maxdim, cutoff, eigsolve_krylovdim, noise, observer=observer, outputlevel)
     
     rydberg_density = calculate_rydberg_density(psi)

@@ -3,7 +3,7 @@
 #SBATCH -C cpu
 #SBATCH -q debug
 #SBATCH -J sq_rb_cut_DMRG
-#SBATCH --account=m888
+#SBATCH --account=m4370
 #SBATCH --mail-user=markhirsbrunner@lbl.gov
 #SBATCH --mail-type=ALL
 #SBATCH -t 00:3:00
@@ -14,11 +14,13 @@
 #SBATCH --open-mode=append
 
 
-
 module load julia
 module load python
+module load dmtcp nersc_cr
 
-source $HOME/dmtcp/env_setup_2.sh
+export LD_DEBUG=all
+
+# source $HOME/dmtcp/env_setup_2.sh
 
 start_coordinator
 
@@ -26,7 +28,8 @@ start_coordinator
 if [[ $(restart_count) == 0 ]]; then
 
     #user setting
-    $HOME/dmtcp/bin/dmtcp_launch -j julia --sysimage ../sys_rydberg.so square_rb_cut.jl $N_WORKERS $N_THREADS $CONFIG_DIR $DATA_DIR --write_dir $WRITE_DIR &
+#     $HOME/dmtcp/bin/dmtcp_launch -j julia --sysimage ../sys_rydberg.so square_rb_cut.jl $N_WORKERS $N_THREADS $CONFIG_DIR $DATA_DIR --write_dir $WRITE_DIR &
+    dmtcp_launch -j julia --sysimage ../sys_rydberg.so square_rb_cut.jl $N_WORKERS $N_THREADS $CONFIG_DIR $DATA_DIR --write_dir $WRITE_DIR &
 elif [[ $(restart_count) > 0 ]] && [[ -e dmtcp_restart_script.sh ]]; then
 
     ./dmtcp_restart_script.sh &

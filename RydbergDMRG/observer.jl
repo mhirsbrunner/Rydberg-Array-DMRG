@@ -20,7 +20,7 @@ function ITensors.checkdone!(o::MyObserver;kwargs...)
     density = calculate_rydberg_density(psi)
     m_s = calculate_staggered_magnetization(psi)
 
-    println("SvN = $(SvN), m_s = $(m_s)")
+    # println("SvN = $(SvN), m_s = $(m_s)")
 
     Ediff = abs(energy-o.last_energy)
     EEdiff = abs(SvN-o.last_entropy)

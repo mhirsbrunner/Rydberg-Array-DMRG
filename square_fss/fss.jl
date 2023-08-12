@@ -56,22 +56,22 @@ outputlevel = parsed_args["outputlevel"]
 
 phase_space_config = JSON3.read(read(joinpath(config_dir, "finite_size_config.json")))
 
-rb_over_a = phase_space_config["rb_over_a"]
-@passobj 1 workers() rb_over_a
+rb = phase_space_config["rb"]
+@passobj 1 workers() rb
 
-delta_over_omega_ax = phase_space_config["delta_over_omega_min"]:phase_space_config["delta_over_omega_step"]:phase_space_config["delta_over_omega_max"]
+delta_ax = phase_space_config["delta_min"]:phase_space_config["delta_step"]:phase_space_config["delta_max"]
 
 if parsed_args["write_dir"] == nothing
     @everywhere function func(input)
-        RydbergDMRG.calculate_finite_size_scaling_data(n_y, rb_over_a, input, config_dir, data_dir; outputlevel=outputlevel)
+        RydbergDMRG.calculate_finite_size_scaling_data(n_y, rb, input, config_dir, data_dir; outputlevel=outputlevel)
     end
 else  
     write_dir = parsed_args["write_dir"]
     @passobj 1 workers() write_dir
 
     @everywhere function func(input)
-        RydbergDMRG.calculate_finite_size_scaling_data(n_y, rb_over_a, input, config_dir, data_dir; outputlevel=outputlevel, write_dir=write_dir)
+        RydbergDMRG.calculate_finite_size_scaling_data(n_y, rb, input, config_dir, data_dir; outputlevel=outputlevel, write_dir=write_dir)
     end
 end
 
-Parallelism.robust_pmap(func, delta_over_omega_ax)
+Parallelism.robust_pmap(func, delta_ax)
