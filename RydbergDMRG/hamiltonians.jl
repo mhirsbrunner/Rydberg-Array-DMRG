@@ -28,6 +28,22 @@ function build_ham(ham_config)
         else
             ham, sites = ham_square_lattice(n_x, n_y, Rb, delta)
         end
+    elseif cmp(lattice, "lieb") * cmp(lattice, "Lieb") == 0
+        n_x = ham_config["n_x"]
+        n_y = ham_config["n_y"]
+        delta_local = ham_config["delta_local"]
+
+        if haskey(ham_config, "nn_cutoff")
+            if haskey(ham_config, "y_periodic")
+                ham, sites = ham_lieb_lattice(n_x, n_y, Rb, delta, delta_local; y_periodic=ham_config["y_periodic"], nn_cutoff=ham_config["nn_cutoff"])
+            else
+                ham, sites = ham_lieb_lattice(n_x, n_y, Rb, delta, delta_local; nn_cutoff=ham_config["nn_cutoff"])
+            end
+        elseif haskey(ham_config, "y_periodic")
+            ham, sites = ham_lieb_lattice(n_x, n_y, Rb, delta, delta_local; y_periodic=ham_config["y_periodic"])
+        else
+            ham, sites = ham_lieb_lattice(n_x, n_y, Rb, delta, delta_local)
+        end
     end
 
     return ham, sites
@@ -148,4 +164,98 @@ function site_to_index_square_lattice(site, n_x, n_y)
     else
         return n_y * (site[1] - 1) + 5 - site[2]
     end
+end
+
+##################
+# Lieb Lattice #
+##################
+
+function generate_sites_lieb_lattice(n_x, n_y, include_last_column=true)
+    # n_x and n_y are unit cells of the Lieb lattice, not rows and columns
+    sites = []
+
+    x_ind = 0
+    y_ind = 0
+
+    for ii in 1:n_x
+        x_ind += 1
+
+        for jj in 1:n_y
+            y_ind += 1
+            push!(sites, [x_ind, y_ind])
+            y_ind += 1
+            push!(sites, [x_ind, y_ind])
+        end
+
+        x_ind += 1
+        y_ind -= 1
+
+        for jj in 1:n_y
+            push!(sites, [x_ind, y_ind])
+            y_ind -= 2
+        end
+
+        y_ind += 1
+    end
+
+    if include_last_column
+        x_ind += 1
+
+        for jj in 1:n_y
+            y_ind += 1
+            push!(sites, [x_ind, y_ind])
+            y_ind += 1
+            push!(sites, [x_ind, y_ind])
+        end
+    end
+
+    return sites
+end
+
+function ham_lieb_lattice(n_x, n_y, Rb, delta, delta_local; yperiodic=true, nn_cutoff=2.1)
+    n_sites = n_x * n_y
+    
+    lattice_sites = generate_sites_lieb_lattice(n_x, n_y)
+
+    os = OpSum()
+
+    for ii = 1:n_sites
+        site = lattice_sites[ii]
+
+        os += 1, "Sx", ii
+        os += -delta, "ProjUp", ii
+        
+        if isodd(site[1]) * isodd(site[2])
+            os += -delta_local, "ProjUp", ii
+        end
+    end
+
+    for ind_1 = 1:n_sites
+        for ind_2 = ind_1 + 1:n_sites
+            site_1 = lattice_sites[ind_1]
+            site_2 = lattice_sites[ind_2]
+
+            x_disp = site_1[1] - site_2[1]
+            temp_y_disp = site_1[2] - site_2[2]
+
+            if yperiodic
+                y_disp = min(abs(temp_y_disp), n_y - abs(temp_y_disp))
+            else
+                y_disp = temp_y_disp
+            end
+
+            r = sqrt(x_disp ^ 2 + y_disp ^ 2)
+
+            if r <= nn_cutoff
+                V = (Rb / r) ^ 6
+                os += V, "ProjUp", ind_1, "ProjUp", ind_2
+            end
+        end
+    end
+
+    sites = siteinds("S=1/2", n_sites)
+
+    hamiltonian = MPO(os, sites)
+
+    return hamiltonian, sites, os
 end
