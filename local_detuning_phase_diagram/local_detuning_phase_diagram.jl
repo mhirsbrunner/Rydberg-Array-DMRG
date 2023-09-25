@@ -43,29 +43,31 @@ config_dir = parsed_args["config_dir"]
 data_dir = parsed_args["data_dir"]
 outputlevel = parsed_args["outputlevel"]
 
+phase_space_config = JSON3.read(read(joinpath(config_dir, "local_detuning_phase_space_config.json")))
+
+rb = phase_space_config["rb"]
+delta_ax = phase_space_config["delta_min"]:phase_space_config["delta_step"]:phase_space_config["delta_max"]
+delta_local_ax = phase_space_config["delta_local_min"]:phase_space_config["delta_local_step"]:phase_space_config["delta_local_max"]
+
 @passobj 1 workers() n_threads
 @passobj 1 workers() config_dir
 @passobj 1 workers() data_dir
 @passobj 1 workers() outputlevel
+@passobj 1 workers() rb
 
 @everywhere BLAS.set_num_threads(n_threads)
 
 if parsed_args["write_dir"] == nothing
     @everywhere function func(a)
-        RydbergDMRG.run_phase_diagram_point(a[1], a[2], config_dir, data_dir; outputlevel=outputlevel)
+        RydbergDMRG.run_local_detuning_phase_diagram_point(rb, a[1], a[2], config_dir, data_dir; outputlevel=outputlevel)
     end
 else  
     write_dir = parsed_args["write_dir"]
     @passobj 1 workers() write_dir
 
     @everywhere function func(a)
-        RydbergDMRG.run_phase_diagram_point(a[1], a[2], config_dir, data_dir; outputlevel=outputlevel, write_dir=write_dir)
+        RydbergDMRG.run_local_detuning_phase_diagram_point(rb, a[1], a[2], config_dir, data_dir; outputlevel=outputlevel, write_dir=write_dir)
     end
 end
 
-phase_space_config = JSON3.read(read(joinpath(config_dir, "phase_space_config.json")))
-
-rb_over_a_ax = phase_space_config["rb_over_a_min"]:phase_space_config["rb_over_a_step"]:phase_space_config["rb_over_a_max"]
-delta_over_omega_ax = phase_space_config["delta_over_omega_min"]:phase_space_config["delta_over_omega_step"]:phase_space_config["delta_over_omega_max"]
-
-Parallelism.robust_pmap(func, Iterators.product(rb_over_a_ax, delta_over_omega_ax))
+Parallelism.robust_pmap(func, Iterators.product(delta_ax, delta_local_ax))

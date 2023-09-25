@@ -213,9 +213,8 @@ function generate_sites_lieb_lattice(n_x, n_y, include_last_column=true)
 end
 
 function ham_lieb_lattice(n_x, n_y, Rb, delta, delta_local; yperiodic=true, nn_cutoff=2.1)
-    n_sites = n_x * n_y
-    
     lattice_sites = generate_sites_lieb_lattice(n_x, n_y)
+    n_sites = length(lattice_sites)
 
     os = OpSum()
 
@@ -225,8 +224,8 @@ function ham_lieb_lattice(n_x, n_y, Rb, delta, delta_local; yperiodic=true, nn_c
         os += 1, "Sx", ii
         os += -delta, "ProjUp", ii
         
-        if isodd(site[1]) * isodd(site[2])
-            os += -delta_local, "ProjUp", ii
+        if !(isodd(site[1]) && isodd(site[2]))
+            os += delta_local, "ProjUp", ii
         end
     end
 
@@ -239,7 +238,7 @@ function ham_lieb_lattice(n_x, n_y, Rb, delta, delta_local; yperiodic=true, nn_c
             temp_y_disp = site_1[2] - site_2[2]
 
             if yperiodic
-                y_disp = min(abs(temp_y_disp), n_y - abs(temp_y_disp))
+                y_disp = min(abs(temp_y_disp), 2 * n_y - abs(temp_y_disp))
             else
                 y_disp = temp_y_disp
             end
@@ -247,6 +246,7 @@ function ham_lieb_lattice(n_x, n_y, Rb, delta, delta_local; yperiodic=true, nn_c
             r = sqrt(x_disp ^ 2 + y_disp ^ 2)
 
             if r <= nn_cutoff
+
                 V = (Rb / r) ^ 6
                 os += V, "ProjUp", ind_1, "ProjUp", ind_2
             end

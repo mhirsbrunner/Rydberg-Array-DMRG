@@ -1,24 +1,24 @@
 #!/bin/bash
-N_WORKERS=2
+N_WORKERS=1
 N_THREADS=8
 
-n_y=10
+n_y=6
 
 TIMESTAMP=$(date +%y-%m-%d_%H-%M-%S)
-# TOP_DIR=/global/homes/m/mhirsbru/Rydberg-Array-DMRG/data/square/${TIMESTAMP}
-TOP_DIR=/global/homes/m/mhirsbru/Rydberg-Array-DMRG/data/square/fss/pinning_field_0.001
+TOP_DIR=/global/homes/m/mhirsbru/Rydberg-Array-DMRG/data/lieb/23x12_8_threads
 DATA_DIR=$TOP_DIR/phase_diagram_data
-
-CONFIG_DIR=$TOP_DIR/config_$TIMESTAMP
-cp -r /global/homes/m/mhirsbru/Rydberg-Array-DMRG/configs/square $CONFIG_DIR
 
 if [ -d $TOP_DIR ] 
 then
     echo "Data directory already exists"
 else
     mkdir $TOP_DIR
-    mkdir $DATA_DIR
 fi
+
+mkdir $DATA_DIR
+
+CONFIG_DIR=$TOP_DIR/config_$TIMESTAMP
+cp -r /global/homes/m/mhirsbru/Rydberg-Array-DMRG/configs/lieb $CONFIG_DIR
 
 WRITE_DIR=/pscratch/sd/m/mhirsbru/${TIMESTAMP}
 mkdir $WRITE_DIR

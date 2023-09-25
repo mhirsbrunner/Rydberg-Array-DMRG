@@ -1,1 +1,1 @@
-{"lattice":"lieb", "n_x":8, "n_y":4, "nn_cutoff":2.1}
+{"lattice":"lieb", "delta_local":0.0, "n_x":9, "n_y":5, "nn_cutoff":4.0}

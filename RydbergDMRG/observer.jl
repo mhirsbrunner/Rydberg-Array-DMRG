@@ -36,6 +36,7 @@ function ITensors.checkdone!(o::MyObserver;kwargs...)
     o.last_m_s = m_s
     o.maxtruncerr = -1
     
+    flush(stdout)
     return false
 end
 

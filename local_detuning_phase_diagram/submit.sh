@@ -3,18 +3,17 @@ N_WORKERS=31
 N_THREADS=8
 
 TIMESTAMP=$(date +%y-%m-%d_%H-%M-%S)
-TOP_DIR=/global/homes/m/mhirsbru/Rydberg-Array-DMRG/data/square/${TIMESTAMP}
+TOP_DIR=/global/homes/m/mhirsbru/Rydberg-Array-DMRG/data/lieb/local_detuning_19x10
 
 if [ -d $TOP_DIR ] 
 then
     echo "Data directory already exists" 
-    exit 1
 else
     mkdir $TOP_DIR
 fi
 
-CONFIG_DIR=$TOP_DIR/config
-cp -r /global/homes/m/mhirsbru/Rydberg-Array-DMRG/configs/square $CONFIG_DIR
+CONFIG_DIR=$TOP_DIR/config_${TIMESTAMP}
+cp -r /global/homes/m/mhirsbru/Rydberg-Array-DMRG/configs/lieb $CONFIG_DIR
 
 DATA_DIR=$TOP_DIR/phase_diagram_data
 mkdir $DATA_DIR

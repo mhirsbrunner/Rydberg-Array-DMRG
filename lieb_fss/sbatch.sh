@@ -2,11 +2,12 @@
 #SBATCH -N 1
 #SBATCH -C cpu
 #SBATCH -q regular
-#SBATCH -J FSS_DMRG
-#SBATCH --mail-user=markhirsbrunner@lbl.gov
+#SBATCH -J 8_threads
+#SBATCH --mail-user=mark@mhirsbrunner.com
 #SBATCH --mail-type=ALL
-#SBATCH -t 24:00:00
-#SBATCH --account=m888
+#SBATCH -t 1:00:00
+#SBATCH --account=m4370
+#SBATCH --reservation=fss_23x12_test
 
 module load julia
 module load python
