@@ -115,7 +115,7 @@ function calculate_susceptibility(n_sites, m_s, M_N_2)
     return n_sites * (M_N_2 - m_s ^ 2)
 end
 
-function run_phase_diagram_point(Rb, delta, config_dir, data_dir; outputlevel=0, write_dir="/pscratch/sd/m/mhirsbru")
+function run_phase_diagram_point(Rb, delta, config_dir, data_dir; outputlevel=0, write_dir=nothing)
     f_name = "$(Rb)_$(delta)"
 
     ham_config, dmrg_config = read_config(config_dir)
@@ -145,14 +145,18 @@ function run_phase_diagram_point(Rb, delta, config_dir, data_dir; outputlevel=0,
 
     observer = RydbergDMRG.MyObserver(e_tol, ee_tol, trunc_tol, min_sweeps)
 
-    write_path = joinpath(write_dir, f_name)
-    mkpath(write_path)
+    if write_dir != nothing
+        write_path = joinpath(write_dir, f_name)
+        mkpath(write_path)
+    end
     
     energy, psi = dmrg(ham, psi0; nsweeps=max_sweeps, maxdim, cutoff, eigsolve_krylovdim, noise, observer=observer, outputlevel)
     rydberg_density = calculate_rydberg_density(psi)
     ee = calculate_entranglement_entropy(psi)
 
-    rm(write_path, recursive=true)
+    if write_dir != nothing
+        rm(write_path, recursive=true)
+    end
 
     store_results(data_dir, f_name, ham_config, dmrg_config, energy, ee, psi, rydberg_density)
 
@@ -287,7 +291,7 @@ function calculate_finite_size_scaling_data(n_y, Rb, delta, config_dir, data_dir
     
     observer = RydbergDMRG.MyObserver(e_tol, ee_tol, trunc_tol, min_sweeps)
 
-    energy, psi = dmrg(ham, psi0; nsweeps=max_sweeps, maxdim, cutoff, eigsolve_krylovdim, noise, observer=observer, outputlevel)
+    energy, psi = dmrg(ham, psi0; nsweeps=max_sweeps, maxdim, cutoff, eigsolve_krylovdim, noise, observer=observer, outputlevel, svd_alg="divide_and_conquer")
     
     rydberg_density = calculate_rydberg_density(psi)
 

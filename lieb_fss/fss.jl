@@ -61,7 +61,13 @@ op_name = phase_space_config["op_name"]
 @passobj 1 workers() rb
 @passobj 1 workers() op_name
 
-delta_ax = phase_space_config["delta_min"]:phase_space_config["delta_step"]:phase_space_config["delta_max"]
+if haskey(phase_space_config, "delta_points")
+    delta_ax = phase_space_config["delta_points"]
+else
+    delta_ax = phase_space_config["delta_min"]:phase_space_config["delta_step"]:phase_space_config["delta_max"]
+end
+
+return
 
 if parsed_args["write_dir"] == nothing
     @everywhere function func(input)

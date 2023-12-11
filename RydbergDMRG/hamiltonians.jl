@@ -35,14 +35,14 @@ function build_ham(ham_config)
 
         if haskey(ham_config, "nn_cutoff")
             if haskey(ham_config, "y_periodic")
-                ham, sites = ham_lieb_lattice(n_x, n_y, Rb, delta, delta_local; y_periodic=ham_config["y_periodic"], nn_cutoff=ham_config["nn_cutoff"])
+                ham, sites = ham_lieb_lattice(n_x, n_y, Rb, delta, delta_local; y_periodic=ham_config["y_periodic"], nn_cutoff=ham_config["nn_cutoff"], bc_boundary=ham_config["bc_boundary"])
             else
-                ham, sites = ham_lieb_lattice(n_x, n_y, Rb, delta, delta_local; nn_cutoff=ham_config["nn_cutoff"])
+                ham, sites = ham_lieb_lattice(n_x, n_y, Rb, delta, delta_local; nn_cutoff=ham_config["nn_cutoff"], bc_boundary=ham_config["bc_boundary"])
             end
         elseif haskey(ham_config, "y_periodic")
-            ham, sites = ham_lieb_lattice(n_x, n_y, Rb, delta, delta_local; y_periodic=ham_config["y_periodic"])
+            ham, sites = ham_lieb_lattice(n_x, n_y, Rb, delta, delta_local; y_periodic=ham_config["y_periodic"], bc_boundary=ham_config["bc_boundary"])
         else
-            ham, sites = ham_lieb_lattice(n_x, n_y, Rb, delta, delta_local)
+            ham, sites = ham_lieb_lattice(n_x, n_y, Rb, delta, delta_local, bc_boundary=ham_config["bc_boundary"])
         end
     end
 
@@ -170,50 +170,102 @@ end
 # Lieb Lattice #
 ##################
 
-function generate_sites_lieb_lattice(n_x, n_y, include_last_column=true)
+# function generate_sites_lieb_lattice(n_x, n_y, include_last_column=true)
+#     # n_x and n_y are unit cells of the Lieb lattice, not rows and columns
+#     sites = []
+
+#     x_ind = 0
+#     y_ind = 0
+
+#     for ii in 1:n_x
+#         x_ind += 1
+
+#         for jj in 1:n_y
+#             y_ind += 1
+#             push!(sites, [x_ind, y_ind])
+#             y_ind += 1
+#             push!(sites, [x_ind, y_ind])
+#         end
+
+#         x_ind += 1
+#         y_ind -= 1
+
+#         for jj in 1:n_y
+#             push!(sites, [x_ind, y_ind])
+#             y_ind -= 2
+#         end
+
+#         y_ind += 1
+#     end
+
+#     if include_last_column
+#         x_ind += 1
+
+#         for jj in 1:n_y
+#             y_ind += 1
+#             push!(sites, [x_ind, y_ind])
+#             y_ind += 1
+#             push!(sites, [x_ind, y_ind])
+#         end
+#     end
+
+#     return sites
+# end
+
+function generate_sites_lieb_lattice(n_x, n_y, y_periodic, bc_boundary=false)
     # n_x and n_y are unit cells of the Lieb lattice, not rows and columns
-    sites = []
+    atoms = []
 
-    x_ind = 0
-    y_ind = 0
-
-    for ii in 1:n_x
-        x_ind += 1
-
-        for jj in 1:n_y
-            y_ind += 1
-            push!(sites, [x_ind, y_ind])
-            y_ind += 1
-            push!(sites, [x_ind, y_ind])
-        end
-
-        x_ind += 1
-        y_ind -= 1
-
-        for jj in 1:n_y
-            push!(sites, [x_ind, y_ind])
-            y_ind -= 2
-        end
-
-        y_ind += 1
+    function add_a_site(x, y)
+        push!(atoms, [2 * x, 2 * y])
     end
 
-    if include_last_column
-        x_ind += 1
+    function add_b_site(x, y)
+        push!(atoms, [2 * x + 1, 2 * y])
+    end
 
-        for jj in 1:n_y
-            y_ind += 1
-            push!(sites, [x_ind, y_ind])
-            y_ind += 1
-            push!(sites, [x_ind, y_ind])
+    function add_c_site(x, y)
+        push!(atoms, [2 * x, 2 * y + 1])
+    end
+    
+
+    for x in 0:n_x - 1
+        for y in 0:n_y - 1
+            add_a_site(x, y)
+            add_b_site(x, y)
+            add_c_site(x, y)
+
+            if bc_boundary
+                if x == 0
+                    add_b_site(x - 1, y)
+                end
+
+                if y == 0 && !y_periodic
+                    add_c_site(x, y - 1)
+                end
+            else
+                if x == n_x - 1
+                    add_a_site(x + 1, y)
+                    add_c_site(x + 1, y)
+                end
+
+                if y == n_y - 1 && !y_periodic
+                    add_a_site(x, y + 1)
+                    add_b_site(x, y + 1)
+                end
+            end
         end
     end
 
-    return sites
+    if !bc_boundary && !y_periodic
+        add_a_site(n_x, n_y)
+    end
+             
+    return atoms
 end
 
-function ham_lieb_lattice(n_x, n_y, Rb, delta, delta_local; yperiodic=true, nn_cutoff=2.1)
-    lattice_sites = generate_sites_lieb_lattice(n_x, n_y)
+function ham_lieb_lattice(n_x, n_y, Rb, delta, delta_local; y_periodic=true, nn_cutoff=2.1, bc_boundary=false)
+    lattice_sites = generate_sites_lieb_lattice(n_x, n_y, y_periodic, bc_boundary)
     n_sites = length(lattice_sites)
 
     os = OpSum()
@@ -237,7 +289,7 @@ function ham_lieb_lattice(n_x, n_y, Rb, delta, delta_local; yperiodic=true, nn_c
             x_disp = site_1[1] - site_2[1]
             temp_y_disp = site_1[2] - site_2[2]
 
-            if yperiodic
+            if y_periodic
                 y_disp = min(abs(temp_y_disp), 2 * n_y - abs(temp_y_disp))
             else
                 y_disp = temp_y_disp

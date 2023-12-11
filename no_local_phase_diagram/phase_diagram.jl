@@ -65,7 +65,14 @@ end
 
 phase_space_config = JSON3.read(read(joinpath(config_dir, "phase_space_config.json")))
 
-rb_ax = phase_space_config["rb_min"]:phase_space_config["rb_step"]:phase_space_config["rb_max"]
-delta_ax = phase_space_config["delta_min"]:phase_space_config["delta_step"]:phase_space_config["delta_max"]
+if haskey(phase_space_config, "param_points")
+    iter = phase_space_config["param_points"]
+else
+    rb_ax = phase_space_config["rb_min"]:phase_space_config["rb_step"]:phase_space_config["rb_max"]
+    delta_ax = phase_space_config["delta_min"]:phase_space_config["delta_step"]:phase_space_config["delta_max"]
+    iter = Iterators.product(rb_ax, delta_ax)
+end
 
-Parallelism.robust_pmap(func, Iterators.product(rb_ax, delta_ax))
+
+
+Parallelism.robust_pmap(func, iter)

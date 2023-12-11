@@ -3,7 +3,7 @@ N_WORKERS=31
 N_THREADS=8
 
 TIMESTAMP=$(date +%y-%m-%d_%H-%M-%S)
-TOP_DIR=/global/homes/m/mhirsbru/Rydberg-Array-DMRG/data/lieb/trial_1
+TOP_DIR=/global/homes/m/mhirsbru/Rydberg-Array-DMRG/data/lieb/abc_boundary_obc
 
 if [ -d $TOP_DIR ] 
 then

@@ -1,1 +1,1 @@
-{"rb_min":1.86, "rb_max":1.90, "rb_step":0.01, "delta_min":1.0,  "delta_max":6.0,  "delta_step":0.1}
+{"rb_min":1.9, "rb_max":2.5, "rb_step":0.1, "delta_min":4.0,  "delta_max":4.0,  "delta_step":0.25}

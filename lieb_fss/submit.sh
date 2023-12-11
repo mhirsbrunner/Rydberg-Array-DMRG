@@ -1,11 +1,11 @@
 #!/bin/bash
-N_WORKERS=1
-N_THREADS=8
+N_WORKERS=3
+N_THREADS=16
 
 n_y=6
 
 TIMESTAMP=$(date +%y-%m-%d_%H-%M-%S)
-TOP_DIR=/global/homes/m/mhirsbru/Rydberg-Array-DMRG/data/lieb/23x12_8_threads
+TOP_DIR=/global/homes/m/mhirsbru/Rydberg-Array-DMRG/data/lieb/fss_colinear_2
 DATA_DIR=$TOP_DIR/phase_diagram_data
 
 if [ -d $TOP_DIR ] 
