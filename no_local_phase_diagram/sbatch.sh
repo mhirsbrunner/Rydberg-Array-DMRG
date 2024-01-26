@@ -6,7 +6,7 @@
 #SBATCH --mail-user=hrsbrnn2@illinois.edu
 #SBATCH --mail-type=ALL
 #SBATCH -t 24:00:00
-#SBATCH --account=m4370
+#SBATCH --account=m888
 
 module load julia
 module load python

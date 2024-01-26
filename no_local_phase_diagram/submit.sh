@@ -1,5 +1,5 @@
 #!/bin/bash
-N_WORKERS=31
+N_WORKERS=1
 N_THREADS=8
 
 TIMESTAMP=$(date +%y-%m-%d_%H-%M-%S)

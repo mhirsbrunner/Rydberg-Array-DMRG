@@ -6,4 +6,7 @@ test/
 temp_data_dir/
 archive/
 sys_rydberg.so
+sysimage_builder/sys_rydberg
+sysimage_builder/sys_itensors.so
+sys_rydberg.so.old
 request_node.sh
