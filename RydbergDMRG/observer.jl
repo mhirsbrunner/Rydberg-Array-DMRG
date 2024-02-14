@@ -6,7 +6,7 @@ mutable struct MyObserver <: AbstractObserver
     min_sweeps::Int
     last_energy::Float64
     last_entropy::Float64
-    last_m_s::Float64
+    # last_m_s::Float64
     maxtruncerr::Float64
     MyObserver(energy_tol=0.0, entropy_tol=0.0, trunc_tol=0.0, min_sweeps=0) = new(energy_tol, entropy_tol, trunc_tol, min_sweeps, 1000.0, 1000.0, -1.0)
 end
@@ -18,22 +18,24 @@ function ITensors.checkdone!(o::MyObserver;kwargs...)
 
     SvN = calculate_entranglement_entropy(psi)
     density = calculate_rydberg_density(psi)
-    m_s = calculate_staggered_magnetization(psi)
+    # m_s = calculate_staggered_magnetization(psi)
 
     # println("SvN = $(SvN), m_s = $(m_s)")
 
     Ediff = abs(energy-o.last_energy)
     EEdiff = abs(SvN-o.last_entropy)
-    m_sdiff = abs(m_s - o.last_m_s)
+    # m_sdiff = abs(m_s - o.last_m_s)
 
-    if o.maxtruncerr <= o.trunc_tol && Ediff < o.energy_tol && EEdiff < o.entropy_tol && m_sdiff < 1e-3 && sweep > o.min_sweeps
-        println("Stopping DMRG after sweep $sweep, energy error $(Ediff) < $(o.energy_tol), entropy error $(EEdiff) < $(o.entropy_tol),  and m_s error $(m_sdiff) <1e-3")
+    bond_dimension = maxlinkdim(psi)
+
+    if o.maxtruncerr <= o.trunc_tol && Ediff < o.energy_tol && EEdiff < o.entropy_tol && sweep > o.min_sweeps
+        println("Stopping DMRG after sweep $sweep with max bond dimension $(bond_dimension): energy error $(Ediff) < $(o.energy_tol), entropy error $(EEdiff) < $(o.entropy_tol)")
         return true
     end
 
     o.last_energy = energy
     o.last_entropy = SvN
-    o.last_m_s = m_s
+    # o.last_m_s = m_s
     o.maxtruncerr = -1
     
     flush(stdout)
@@ -43,6 +45,7 @@ end
 function ITensors.measure!(o::MyObserver; kwargs...)
     energy = kwargs[:energy]
     sweep = kwargs[:sweep]
+    half_sweep = kwargs[:half_sweep]
     bond = kwargs[:bond]
     outputlevel = kwargs[:outputlevel]
   
@@ -52,6 +55,10 @@ function ITensors.measure!(o::MyObserver; kwargs...)
     if outputlevel > 2
       println("Sweep $sweep at bond $bond, the energy is $energy")
     end
+    
+    # if bond==1 && half_sweep==2
+    #     GC.gc()
+    # end
 end
 
 function calculate_entranglement_entropy(psi)

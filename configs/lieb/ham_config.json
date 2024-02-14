@@ -1,1 +1,1 @@
-{"lattice":"lieb", "delta_local":0.0, "n_x":8, "n_y":4, "nn_cutoff":4.0, "y_periodic":false, "bc_boundary": false}
+{"lattice":"lieb", "delta_local":0.0, "n_x":8, "n_y":4, "nn_cutoff":4.0, "y_periodic":true, "bc_boundary": false}

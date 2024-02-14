@@ -1,9 +1,9 @@
 #!/bin/bash
-N_WORKERS=1
+N_WORKERS=16
 N_THREADS=8
 
 TIMESTAMP=$(date +%y-%m-%d_%H-%M-%S)
-TOP_DIR=/global/homes/m/mhirsbru/Rydberg-Array-DMRG/data/lieb/abc_boundary_obc
+TOP_DIR=/global/homes/m/mhirsbru/Rydberg-Array-DMRG/data/lieb/8x4_cylinder_pd
 
 if [ -d $TOP_DIR ] 
 then

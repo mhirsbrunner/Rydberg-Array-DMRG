@@ -9,4 +9,6 @@ sys_rydberg.so
 sysimage_builder/sys_rydberg
 sysimage_builder/sys_itensors.so
 sys_rydberg.so.old
+sys_rydberg.so.1.9
+sys_itensors.so.1.9
 request_node.sh

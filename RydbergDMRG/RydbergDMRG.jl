@@ -153,12 +153,13 @@ function run_phase_diagram_point(Rb, delta, config_dir, data_dir; outputlevel=0,
     energy, psi = dmrg(ham, psi0; nsweeps=max_sweeps, maxdim, cutoff, eigsolve_krylovdim, noise, observer=observer, outputlevel)
     rydberg_density = calculate_rydberg_density(psi)
     ee = calculate_entranglement_entropy(psi)
+    correlator = correlation_matrix(psi, "ProjUp", "ProjUp")
 
     if write_dir != nothing
         rm(write_path, recursive=true)
     end
 
-    store_results(data_dir, f_name, ham_config, dmrg_config, energy, ee, psi, rydberg_density)
+    store_results(data_dir, f_name, ham_config, dmrg_config, energy, ee, psi, rydberg_density, correlator)
 
     return psi
 end
